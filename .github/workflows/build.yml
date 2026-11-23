@@ -1,0 +1,35 @@
+# ARC CI — generated from the stratus arc-ci workflow template
+# (lint-manifests.yml there; see the arc-ci README for design and onboarding).
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request: {}
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: inference-e2e-manifests
+    container: registry.access.redhat.com/ubi9/python-312:latest
+    steps:
+      - name: clone
+        run: |
+          set -eu
+          git clone --depth 1 "https://github.com/${{ github.repository }}.git" .
+          if [ -n "${{ github.event.pull_request.number }}" ]; then
+            git fetch --depth 1 origin "pull/${{ github.event.pull_request.number }}/head"
+          else
+            git fetch --depth 1 origin "${{ github.sha }}"
+          fi
+          git checkout --detach FETCH_HEAD
+      - name: yamllint
+        run: |
+          set -eu
+          # docker.io images are rate-limited on this cluster; use UBI
+          # python and install yamllint from PyPI.
+          pip install --quiet yamllint
+          yamllint -d relaxed .
