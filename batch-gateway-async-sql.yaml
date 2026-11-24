@@ -275,6 +275,11 @@ spec:
         queuesConfig:
           - name: llm-d-async:requests:batch-gateway-async-sql-inference-pool
             workerPoolID: default
+            # Declared explicitly so the conformance suite's deploy-time rewrite
+            # fills it with the discovered gateway URL. Operators that implement
+            # the "queue inherits inferenceGateway.url" default would not need
+            # this; declaring it keeps the dispatch target correct either way.
+            igwBaseURL: http://conformance-rewrite-me.invalid
       workerPools:
         - name: default
           workers: 4
